@@ -92,7 +92,6 @@
 
 
 
-
 import React from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { Github, Linkedin, Facebook, Trash2 } from "lucide-react";
@@ -121,38 +120,43 @@ const TaskCard: React.FC<Props> = ({ task, onDelete }) => {
 
   const style = {
     transform: transform ? `translate(${transform.x}px, ${transform.y}px)` : undefined,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.6 : 1,
+    transition: isDragging ? "none" : "transform 0.25s ease",
   };
 
   return (
     <div
       ref={setNodeRef}
-      style={style}
       {...listeners}
       {...attributes}
-      className="bg-white p-4 rounded-lg shadow hover:shadow-md transition cursor-move flex flex-col justify-between"
+      style={style}
+      className="bg-white p-4 rounded-xl border border-gray-200 shadow-md hover:shadow-xl hover:scale-[1.02] transition-all duration-300 ease-in-out cursor-grab active:cursor-grabbing flex flex-col justify-between"
     >
-      {/* Task Content */}
+      {/* Title and Description */}
       <div>
-        <h3 className="text-lg font-semibold">{task.title}</h3>
-        {task.description && <p className="text-sm text-gray-600">{task.description}</p>}
-        {task.date && <p className="text-xs text-gray-400 mt-1">Due: {task.date}</p>}
+        <h3 className="text-lg font-bold text-gray-800">{task.title}</h3>
+        {task.description && (
+          <p className="text-sm text-gray-600 mt-1">{task.description}</p>
+        )}
+        {task.date && (
+          <p className="text-xs text-gray-400 mt-2">📅 Due: {task.date}</p>
+        )}
       </div>
 
-      {/* Avatar Image */}
+      {/* Avatar */}
       {task.avatar && (
         <div className="mt-4 flex justify-start">
           <img
-            src='/images/s2.jpg'
+            src="/images/s2.jpg"
             alt="Avatar"
-            className="w-10 h-10 rounded-full border-2 border-gray-300 shadow-sm object-cover"
+            className="w-10 h-10 rounded-full border border-gray-300 object-cover shadow-sm"
           />
         </div>
       )}
 
-      {/* Bottom Row: Icons + Delete */}
+      {/* Icons + Delete */}
       <div className="mt-3 flex items-center justify-between">
-        {/* Social Icons Left */}
+        {/* Socials */}
         <div className="flex gap-3 text-gray-500">
           {task.github && (
             <a href={task.github} target="_blank" rel="noopener noreferrer">
@@ -171,10 +175,10 @@ const TaskCard: React.FC<Props> = ({ task, onDelete }) => {
           )}
         </div>
 
-        {/* Delete Icon Right */}
+        {/* Delete */}
         <button
           onClick={() => onDelete(task.id)}
-          className="text-red-500 hover:text-red-700"
+          className="text-red-500 hover:text-red-700 transition"
           title="Delete Task"
         >
           <Trash2 className="w-4 h-4" />
