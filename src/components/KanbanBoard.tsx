@@ -10,9 +10,9 @@ export default function KanbanBoard() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showModal, setShowModal] = useState(false);
 
-  // ✅ Load tasks from Appwrite (and add icons manually for frontend)
+  // ✅ Load tasks from Appwrite on first render
   useEffect(() => {
-    const loadTasks = async () => {
+    const fetchTasks = async () => {
       try {
         const res = await databases.listDocuments(DATABASE_ID, COLLECTION_ID);
         const loadedTasks: Task[] = res.documents.map((doc) => ({
@@ -20,39 +20,40 @@ export default function KanbanBoard() {
           title: doc.title,
           description: doc.description,
           date: doc.date,
-          status: doc.status,
-          avatar: "/images/s1.jpg",
-          github: "https://github.com/example",
-          linkedin: "https://linkedin.com/in/example",
-          facebook: "https://facebook.com/example",
+          status: doc.status as TaskStatus,
+          avatar: "/images/s2.jpg",
+          github: doc.github,
+          linkedin: doc.linkedin,
+          facebook: doc.facebook,
         }));
         setTasks(loadedTasks);
       } catch (err) {
-        console.error("❌ Failed to load from Appwrite:", err);
+        console.error("❌ Error loading tasks:", err);
       }
     };
 
-    loadTasks();
+    fetchTasks();
   }, []);
 
-  // ✅ Add new task (frontend + Appwrite)
-  const handleAddTask = async (data: { title: string; description?: string; date?: string }) => {
+  // ✅ Add new task
+  const handleAddTask = async (data: {
+    title: string;
+    description: string;
+    date: string;
+  }) => {
     const newLocalTask: Task = {
-      id: Date.now().toString(),
+      id: Date.now().toString(), // temp ID
       title: data.title,
       description: data.description,
       date: data.date,
       status: "to-do",
       avatar: "/images/s1.jpg",
-      github: "https://github.com/example",
-      linkedin: "https://linkedin.com/in/example",
-      facebook: "https://facebook.com/example",
     };
 
-    setTasks((prev) => [...prev, newLocalTask]);
+    setTasks((prev) => [...prev, newLocalTask]); // fast UI
 
     try {
-      await databases.createDocument(
+      const res = await databases.createDocument(
         DATABASE_ID,
         COLLECTION_ID,
         ID.unique(),
@@ -63,40 +64,58 @@ export default function KanbanBoard() {
           status: "to-do",
         }
       );
+
+      // Replace temp task with actual task
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === newLocalTask.id
+            ? {
+                ...t,
+                id: res.$id,
+              }
+            : t
+        )
+      );
     } catch (err) {
-      console.error("❌ Error saving to Appwrite:", err);
+      console.error("❌ Error saving task to Appwrite:", err);
     }
   };
 
-  // ✅ Drag & Drop
+  // ✅ Handle drag
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
+    const taskId = String(active.id);
     const newStatus = over.id as TaskStatus;
 
     setTasks((prev) =>
       prev.map((task) =>
-        task.id === active.id ? { ...task, status: newStatus } : task
+        task.id === taskId ? { ...task, status: newStatus } : task
       )
     );
 
     try {
-      await databases.updateDocument(DATABASE_ID, COLLECTION_ID, String(active.id), {
+      await databases.updateDocument(DATABASE_ID, COLLECTION_ID, taskId, {
         status: newStatus,
       });
     } catch (err) {
-      console.error("❌ Failed to update status:", err);
+      console.error("❌ Failed to update task status:", err);
     }
   };
 
-  // ✅ Delete
-  const handleDelete = (id: string) => {
-    setTasks((prev) => prev.filter((task) => task.id !== id));
-    // Optionally also delete from Appwrite here if needed
+  // ✅ Delete task
+  const handleDelete = async (id: string) => {
+    setTasks((prev) => prev.filter((t) => t.id !== id));
+    try {
+      await databases.deleteDocument(DATABASE_ID, COLLECTION_ID, id);
+    } catch (err) {
+      console.error("❌ Failed to delete task:", err);
+    }
   };
 
-  const columns: { status: TaskStatus; title: string }[] = [
+  // ✅ Columns with mapped tasks
+  const statuses: { status: TaskStatus; title: string }[] = [
     { status: "to-do", title: "To-do" },
     { status: "progress", title: "In-progress" },
     { status: "done", title: "Done" },
@@ -106,7 +125,7 @@ export default function KanbanBoard() {
     <>
       <DndContext onDragEnd={handleDragEnd}>
         <div className="flex gap-4 overflow-x-auto p-4">
-          {columns.map((col) => (
+          {statuses.map((col) => (
             <Column
               key={col.status}
               status={col.status}
@@ -120,10 +139,7 @@ export default function KanbanBoard() {
       </DndContext>
 
       {showModal && (
-        <AddTaskModal
-          onAdd={handleAddTask}
-          onClose={() => setShowModal(false)}
-        />
+        <AddTaskModal onAdd={handleAddTask} onClose={() => setShowModal(false)} />
       )}
     </>
   );
