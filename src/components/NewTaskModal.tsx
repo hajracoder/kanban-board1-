@@ -1,4 +1,7 @@
+
 import React, { useState } from "react";
+import { Task, TaskStatus } from "../types";
+
 
 type Props = {
   onAdd: (task: { title: string; description: string; date: string }) => void;
@@ -17,7 +20,10 @@ export default function AddTaskModal({ onAdd, onClose }: Props) {
     }
 
     onAdd({ title: title.trim(), description: description.trim(), date });
+
     onClose();
+
+    // ✅ Optional: Clear form (if reused later)
     setTitle("");
     setDescription("");
     setDate("");
