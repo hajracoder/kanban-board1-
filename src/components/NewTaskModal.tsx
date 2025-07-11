@@ -1,5 +1,7 @@
 
 import React, { useState } from "react";
+import { Task, TaskStatus } from "../types";
+
 
 type Props = {
   onAdd: (task: { title: string; description: string; date: string }) => void;
@@ -12,13 +14,23 @@ export default function AddTaskModal({ onAdd, onClose }: Props) {
   const [date, setDate] = useState("");
 
   const handleSubmit = () => {
-    if (!title) return alert("Please enter a title");
-    onAdd({ title, description, date });
+    if (!title.trim()) {
+      alert("Please enter a valid title");
+      return;
+    }
+
+    onAdd({ title: title.trim(), description: description.trim(), date });
+
     onClose();
+
+    // ✅ Optional: Clear form (if reused later)
+    setTitle("");
+    setDescription("");
+    setDate("");
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center">
+    <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center z-50">
       <div className="bg-white p-6 rounded-xl w-96 shadow-lg">
         <h2 className="text-lg font-bold mb-4">Add New Task</h2>
         <input
@@ -41,8 +53,19 @@ export default function AddTaskModal({ onAdd, onClose }: Props) {
           className="w-full border p-2 rounded mb-4"
         />
         <div className="flex justify-end gap-2">
-          <button onClick={onClose} className="text-gray-500 hover:underline">Cancel</button>
-          <button onClick={handleSubmit} className="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600">Add</button>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:underline"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            className="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600 disabled:opacity-50"
+            disabled={!title.trim()}
+          >
+            Add
+          </button>
         </div>
       </div>
     </div>

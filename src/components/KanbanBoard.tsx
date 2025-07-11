@@ -2,101 +2,117 @@ import React, { useEffect, useState } from "react";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import Column from "./Column";
 import AddTaskModal from "./NewTaskModal";
-
-const STORAGE_KEY = "kanban-tasks";
-
-type Task = {
-  id: string;
-  title: string;
-  description?: string;
-  date?: string;
-  status: "To-do" | "In-progress" | "Done";
-  avatar?: string;
-  github?: string;
-  linkedin?: string;
-  facebook?: string;
-};
+import { databases, DATABASE_ID, COLLECTION_ID } from "../appwrite/appwrite";
+import { ID } from "appwrite";
+import { Task, TaskStatus } from "../types";
 
 export default function KanbanBoard() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showModal, setShowModal] = useState(false);
 
-  // ✅ Load tasks once
+  // ✅ Load tasks from Appwrite (and add icons manually for frontend)
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved && saved !== "[]") {
+    const loadTasks = async () => {
       try {
-        const parsed: Task[] = JSON.parse(saved);
-        setTasks(parsed);
+        const res = await databases.listDocuments(DATABASE_ID, COLLECTION_ID);
+        const loadedTasks: Task[] = res.documents.map((doc) => ({
+          id: doc.$id,
+          title: doc.title,
+          description: doc.description,
+          date: doc.date,
+          status: doc.status,
+          avatar: "/images/s1.jpg",
+          github: "https://github.com/example",
+          linkedin: "https://linkedin.com/in/example",
+          facebook: "https://facebook.com/example",
+        }));
+        setTasks(loadedTasks);
       } catch (err) {
-        console.error("Error parsing tasks:", err);
+        console.error("❌ Failed to load from Appwrite:", err);
       }
-    } else {
-      const defaultTask: Task = {
-        id: Date.now().toString(),
-        title: "Welcome Task",
-        description: "This is your first task card!",
-        date: new Date().toISOString().split("T")[0],
-        status: "To-do",
-        avatar: "/images/s1.jpg",
-        github: "https://github.com/example",
-        linkedin: "https://linkedin.com/in/example",
-        facebook: "https://facebook.com/example",
-      };
-      setTasks([defaultTask]);
-    }
+    };
+
+    loadTasks();
   }, []);
 
-  // ✅ Save tasks to localStorage when they change
-  useEffect(() => {
-    if (tasks.length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-    }
-  }, [tasks]);
-
-  // ✅ Add Task
-  const handleAddTask = (data: { title: string; description: string; date: string }) => {
-    const newTask: Task = {
+  // ✅ Add new task (frontend + Appwrite)
+  const handleAddTask = async (data: { title: string; description?: string; date?: string }) => {
+    const newLocalTask: Task = {
       id: Date.now().toString(),
       title: data.title,
       description: data.description,
       date: data.date,
-      status: "To-do",
+      status: "to-do",
       avatar: "/images/s1.jpg",
       github: "https://github.com/example",
       linkedin: "https://linkedin.com/in/example",
       facebook: "https://facebook.com/example",
     };
-    setTasks((prev) => [...prev, newTask]);
+
+    setTasks((prev) => [...prev, newLocalTask]);
+
+    try {
+      await databases.createDocument(
+        DATABASE_ID,
+        COLLECTION_ID,
+        ID.unique(),
+        {
+          title: data.title,
+          description: data.description,
+          date: data.date,
+          status: "to-do",
+        }
+      );
+    } catch (err) {
+      console.error("❌ Error saving to Appwrite:", err);
+    }
   };
 
-  // ✅ Move Task Between Columns
-  const handleDragEnd = (event: DragEndEvent) => {
+  // ✅ Drag & Drop
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
-    if (!over) return;
+    if (!over || active.id === over.id) return;
+
+    const newStatus = over.id as TaskStatus;
 
     setTasks((prev) =>
       prev.map((task) =>
-        task.id === active.id ? { ...task, status: over.id as Task["status"] } : task
+        task.id === active.id ? { ...task, status: newStatus } : task
       )
     );
+
+    try {
+      await databases.updateDocument(DATABASE_ID, COLLECTION_ID, String(active.id), {
+        status: newStatus,
+      });
+    } catch (err) {
+      console.error("❌ Failed to update status:", err);
+    }
   };
 
-  // ✅ Delete Task
+  // ✅ Delete
   const handleDelete = (id: string) => {
     setTasks((prev) => prev.filter((task) => task.id !== id));
+    // Optionally also delete from Appwrite here if needed
   };
+
+  const columns: { status: TaskStatus; title: string }[] = [
+    { status: "to-do", title: "To-do" },
+    { status: "progress", title: "In-progress" },
+    { status: "done", title: "Done" },
+  ];
 
   return (
     <>
       <DndContext onDragEnd={handleDragEnd}>
         <div className="flex gap-4 overflow-x-auto p-4">
-          {["To-do", "In-progress", "Done"].map((column) => (
+          {columns.map((col) => (
             <Column
-              key={column}
-              title={column as Task["status"]}
-              tasks={tasks.filter((task) => task.status === column)}
-              onAdd={column === "To-do" ? () => setShowModal(true) : undefined}
+              key={col.status}
+              status={col.status}
+              title={col.title}
+              tasks={tasks.filter((task) => task.status === col.status)}
+              onAdd={col.status === "to-do" ? () => setShowModal(true) : undefined}
               onDelete={handleDelete}
             />
           ))}

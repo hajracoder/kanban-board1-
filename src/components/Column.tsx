@@ -2,29 +2,19 @@ import React from "react";
 import { Plus } from "lucide-react";
 import TaskCard from "./TaskCard";
 import { useDroppable } from "@dnd-kit/core";
-
-type Task = {
-  id: string;
-  title: string;
-  description?: string;
-  date?: string;
-  status: "To-do" | "In-progress" | "Done";
-  avatars?: string[]; // 🧑‍💻 multiple DPs
-  linkedin?: string;
-  github?: string;
-  facebook?: string;
-};
+import { Task, TaskStatus } from "../types"; // ✅ Make sure TaskStatus bhi import ho
 
 
 type ColumnProps = {
+  status: TaskStatus; 
   title: string;
   tasks: Task[];
-  onDelete: (id: string) => void;
   onAdd?: () => void;
+  onDelete: (id: string) => void;
 };
 
-export default function Column({ title, tasks, onAdd, onDelete }: ColumnProps) {
-  const { setNodeRef } = useDroppable({ id: title });
+export default function Column({ status,title, tasks, onAdd, onDelete }: ColumnProps) {
+  const { setNodeRef } = useDroppable({ id: status });
 
   const bgColors: Record<string, string> = {
     "To-do": "bg-blue-50",
