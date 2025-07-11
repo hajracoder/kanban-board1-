@@ -91,10 +91,15 @@ export default function KanbanBoard() {
   };
 
   // ✅ Delete
-  const handleDelete = (id: string) => {
+const handleDelete = async (id: string) => {
+  try {
+    await databases.deleteDocument(DATABASE_ID, COLLECTION_ID, id);
     setTasks((prev) => prev.filter((task) => task.id !== id));
-    // Optionally also delete from Appwrite here if needed
-  };
+  } catch (err) {
+    console.error("❌ Failed to delete from Appwrite:", err);
+  }
+};
+
 
   const columns: { status: TaskStatus; title: string }[] = [
     { status: "to-do", title: "To-do" },
