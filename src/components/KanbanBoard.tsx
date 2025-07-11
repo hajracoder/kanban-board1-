@@ -1,104 +1,130 @@
 import React, { useEffect, useState } from "react";
+import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import Column from "./Column";
 import AddTaskModal from "./NewTaskModal";
-import { Task, TaskStatus } from "../types";
 import { databases, DATABASE_ID, COLLECTION_ID } from "../appwrite/appwrite";
-import { ID, Query } from "appwrite";
+import { ID } from "appwrite";
+import { Task, TaskStatus } from "../types";
 
 export default function KanbanBoard() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showModal, setShowModal] = useState(false);
 
-  // ✅ Fetch tasks from backend
+  // ✅ Load tasks from Appwrite (and add icons manually for frontend)
   useEffect(() => {
-    const fetchTasks = async () => {
+    const loadTasks = async () => {
       try {
         const res = await databases.listDocuments(DATABASE_ID, COLLECTION_ID);
-        const fetchedTasks = res.documents.map((doc: any) => ({
+        const loadedTasks: Task[] = res.documents.map((doc) => ({
           id: doc.$id,
           title: doc.title,
           description: doc.description,
           date: doc.date,
           status: doc.status,
-          avatar: doc.avatar,
-          github: doc.github,
-          linkedin: doc.linkedin,
-          facebook: doc.facebook,
+          avatar: "/images/s1.jpg",
+          github: "https://github.com/example",
+          linkedin: "https://linkedin.com/in/example",
+          facebook: "https://facebook.com/example",
         }));
-        setTasks(fetchedTasks);
-      } catch (error) {
-        console.error("Error fetching tasks:", error);
+        setTasks(loadedTasks);
+      } catch (err) {
+        console.error("❌ Failed to load from Appwrite:", err);
       }
     };
 
-    fetchTasks();
+    loadTasks();
   }, []);
 
-  // ✅ Add task handler
-  const handleAddTask = async (data: {
-    title: string;
-    description: string;
-    date: string;
-  }) => {
-    const newTask: Task = {
+  // ✅ Add new task (frontend + Appwrite)
+  const handleAddTask = async (data: { title: string; description?: string; date?: string }) => {
+    const newLocalTask: Task = {
       id: Date.now().toString(),
       title: data.title,
       description: data.description,
       date: data.date,
       status: "to-do",
       avatar: "/images/s1.jpg",
+      github: "https://github.com/example",
+      linkedin: "https://linkedin.com/in/example",
+      facebook: "https://facebook.com/example",
     };
 
-    setTasks((prev) => [...prev, newTask]);
+    setTasks((prev) => [...prev, newLocalTask]);
 
     try {
-      const res = await databases.createDocument(
+      await databases.createDocument(
         DATABASE_ID,
         COLLECTION_ID,
         ID.unique(),
-        newTask
+        {
+          title: data.title,
+          description: data.description,
+          date: data.date,
+          status: "to-do",
+        }
       );
     } catch (err) {
-      console.error("Failed to add task:", err);
+      console.error("❌ Error saving to Appwrite:", err);
     }
   };
 
-  // ✅ Delete handler
-  const handleDelete = async (id: string) => {
-    setTasks((prev) => prev.filter((task) => task.id !== id));
+  // ✅ Drag & Drop
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const newStatus = over.id as TaskStatus;
+
+    setTasks((prev) =>
+      prev.map((task) =>
+        task.id === active.id ? { ...task, status: newStatus } : task
+      )
+    );
 
     try {
-      await databases.deleteDocument(DATABASE_ID, COLLECTION_ID, id);
+      await databases.updateDocument(DATABASE_ID, COLLECTION_ID, String(active.id), {
+        status: newStatus,
+      });
     } catch (err) {
-      console.error("Failed to delete:", err);
+      console.error("❌ Failed to update status:", err);
     }
   };
 
+  // ✅ Delete
+  const handleDelete = (id: string) => {
+    setTasks((prev) => prev.filter((task) => task.id !== id));
+    // Optionally also delete from Appwrite here if needed
+  };
+
+  const columns: { status: TaskStatus; title: string }[] = [
+    { status: "to-do", title: "To-do" },
+    { status: "progress", title: "In-progress" },
+    { status: "done", title: "Done" },
+  ];
+
   return (
-    <div className="flex gap-4 p-4">
-      <Column
-        title="To-do"
-        status="to-do"
-        tasks={tasks.filter((task) => task.status === "to-do")}
-        onAdd={() => setShowModal(true)}
-        onDelete={handleDelete}
-      />
-      <Column
-        title="In-progress"
-        status="progress"
-        tasks={tasks.filter((task) => task.status === "progress")}
-        onDelete={handleDelete}
-      />
-      <Column
-        title="Done"
-        status="done"
-        tasks={tasks.filter((task) => task.status === "done")}
-        onDelete={handleDelete}
-      />
+    <>
+      <DndContext onDragEnd={handleDragEnd}>
+        <div className="flex gap-4 overflow-x-auto p-4">
+          {columns.map((col) => (
+            <Column
+              key={col.status}
+              status={col.status}
+              title={col.title}
+              tasks={tasks.filter((task) => task.status === col.status)}
+              onAdd={col.status === "to-do" ? () => setShowModal(true) : undefined}
+              onDelete={handleDelete}
+            />
+          ))}
+        </div>
+      </DndContext>
 
       {showModal && (
-        <AddTaskModal onAdd={handleAddTask} onClose={() => setShowModal(false)} />
+        <AddTaskModal
+          onAdd={handleAddTask}
+          onClose={() => setShowModal(false)}
+        />
       )}
-    </div>
+    </>
   );
 }
