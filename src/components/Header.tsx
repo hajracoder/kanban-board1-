@@ -1,5 +1,4 @@
 
-
 import React, { useState } from "react";
 import { Search, Bell, Settings, Lock, MoreVertical, X } from "lucide-react";
 
@@ -7,7 +6,7 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="px-4 sm:px-6 py-4 border-b bg-white shadow-sm sticky top-0 z-50">
+    <header className="px-4 sm:px-6 py-4 border-b bg-white shadow-sm sticky top-0 z-50  ">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         {/* Top Row */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-3 sm:gap-0">
