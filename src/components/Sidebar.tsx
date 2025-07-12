@@ -1,3 +1,6 @@
+
+
+
 import React from "react";
 import {
   LayoutGrid,
@@ -7,26 +10,28 @@ import {
 
 export default function Sidebar() {
   return (
-    <aside className="w-full sm:w-64 min-h-screen bg-white border-r px-4 py-6">
-      {/* Logo/Agency */}
+    <aside className="w-full sm:w-64 min-h-screen bg-white border-r px-6 py-8 shadow-sm">
+      {/* Logo */}
       <div className="flex items-center gap-2 mb-10">
-        <div className="w-6 h-6 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-md"></div>
-        <span className="font-semibold text-lg">agency</span>
+        <div className="w-6 h-6 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-md shadow-md"></div>
+        <span className="font-bold text-xl tracking-tight text-gray-800">agency</span>
       </div>
 
-      {/* Nav links */}
+      {/* Nav */}
       <nav className="space-y-4">
-        <div className="flex items-center gap-3 text-blue-600 font-medium">
+        <div className="flex items-center gap-3 text-blue-600 font-semibold">
           <LayoutGrid className="w-5 h-5" />
-          Boards
+          <span>Boards</span>
         </div>
-        <div className="flex items-center gap-3 text-gray-600 hover:text-black cursor-pointer">
+
+        <div className="flex items-center gap-3 text-gray-600 hover:text-black transition cursor-pointer">
           <FolderKanban className="w-5 h-5" />
-          Projects
+          <span>Projects</span>
         </div>
-        <div className="flex items-center gap-3 text-gray-600 hover:text-black cursor-pointer">
+
+        <div className="flex items-center gap-3 text-gray-600 hover:text-black transition cursor-pointer">
           <Settings className="w-5 h-5" />
-          Settings
+          <span>Settings</span>
         </div>
       </nav>
     </aside>
