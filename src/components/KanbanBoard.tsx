@@ -1,19 +1,24 @@
-
-
-
 import React, { useEffect, useState } from "react";
-import { DndContext, DragEndEvent } from "@dnd-kit/core";
+// import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import Column from "./Column";
 import AddTaskModal from "./NewTaskModal";
 import { databases, DATABASE_ID, COLLECTION_ID } from "../appwrite/appwrite";
 import { ID } from "appwrite";
 import { Task, TaskStatus } from "../types";
+import {
+  DndContext,
+  DragEndEvent,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+
 
 export default function KanbanBoard() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showModal, setShowModal] = useState(false);
 
-  // ✅ Load tasks from Appwrite
   useEffect(() => {
     const loadTasks = async () => {
       try {
@@ -38,7 +43,6 @@ export default function KanbanBoard() {
     loadTasks();
   }, []);
 
-  // ✅ Add new task
   const handleAddTask = async (data: { title: string; description?: string; date?: string }) => {
     const newLocalTask: Task = {
       id: Date.now().toString(),
@@ -71,7 +75,6 @@ export default function KanbanBoard() {
     }
   };
 
-  // ✅ Drag & Drop
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -93,7 +96,6 @@ export default function KanbanBoard() {
     }
   };
 
-  // ✅ Delete
   const handleDelete = async (id: string) => {
     try {
       await databases.deleteDocument(DATABASE_ID, COLLECTION_ID, id);
@@ -108,20 +110,26 @@ export default function KanbanBoard() {
     { status: "progress", title: "In-progress" },
     { status: "done", title: "Done" },
   ];
+  const mouseSensor = useSensor(MouseSensor);
+const touchSensor = useSensor(TouchSensor);
+const sensors = useSensors(mouseSensor, touchSensor);
+
 
   return (
     <>
-      <DndContext onDragEnd={handleDragEnd}>
-        <div className="flex flex-col sm:flex-row gap-4 overflow-x-auto p-4">
+      <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+        <div className="flex flex-col lg:flex-row gap-4 px-2 py-4 sm:p-4 w-full max-w-full overflow-x-hidden">
           {columns.map((col) => (
             <Column
-              key={col.status}
-              status={col.status}
-              title={col.title}
-              tasks={tasks.filter((task) => task.status === col.status)}
-              onAdd={col.status === "to-do" ? () => setShowModal(true) : undefined}
-              onDelete={handleDelete}
-            />
+  key={col.status}
+  status={col.status}
+  title={col.title}
+  tasks={tasks.filter((task) => task.status === col.status)}
+  onAdd={col.status === "to-do" ? () => setShowModal(true) : undefined}
+  onDelete={handleDelete}
+  setTasks={setTasks} // ✅ pass this prop
+/>
+
           ))}
         </div>
       </DndContext>
