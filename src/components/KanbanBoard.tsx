@@ -1,3 +1,6 @@
+
+
+
 import React, { useEffect, useState } from "react";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import Column from "./Column";
@@ -10,7 +13,7 @@ export default function KanbanBoard() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showModal, setShowModal] = useState(false);
 
-  // ✅ Load tasks from Appwrite (and add icons manually for frontend)
+  // ✅ Load tasks from Appwrite
   useEffect(() => {
     const loadTasks = async () => {
       try {
@@ -35,7 +38,7 @@ export default function KanbanBoard() {
     loadTasks();
   }, []);
 
-  // ✅ Add new task (frontend + Appwrite)
+  // ✅ Add new task
   const handleAddTask = async (data: { title: string; description?: string; date?: string }) => {
     const newLocalTask: Task = {
       id: Date.now().toString(),
@@ -91,15 +94,14 @@ export default function KanbanBoard() {
   };
 
   // ✅ Delete
-const handleDelete = async (id: string) => {
-  try {
-    await databases.deleteDocument(DATABASE_ID, COLLECTION_ID, id);
-    setTasks((prev) => prev.filter((task) => task.id !== id));
-  } catch (err) {
-    console.error("❌ Failed to delete from Appwrite:", err);
-  }
-};
-
+  const handleDelete = async (id: string) => {
+    try {
+      await databases.deleteDocument(DATABASE_ID, COLLECTION_ID, id);
+      setTasks((prev) => prev.filter((task) => task.id !== id));
+    } catch (err) {
+      console.error("❌ Failed to delete from Appwrite:", err);
+    }
+  };
 
   const columns: { status: TaskStatus; title: string }[] = [
     { status: "to-do", title: "To-do" },
@@ -110,7 +112,7 @@ const handleDelete = async (id: string) => {
   return (
     <>
       <DndContext onDragEnd={handleDragEnd}>
-        <div className="flex gap-4 overflow-x-auto p-4">
+        <div className="flex flex-col sm:flex-row gap-4 overflow-x-auto p-4">
           {columns.map((col) => (
             <Column
               key={col.status}
