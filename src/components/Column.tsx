@@ -1,19 +1,20 @@
+
+
 import React from "react";
 import { Plus } from "lucide-react";
 import TaskCard from "./TaskCard";
 import { useDroppable } from "@dnd-kit/core";
-import { Task, TaskStatus } from "../types"; // ✅ Make sure TaskStatus bhi import ho
-
+import { Task, TaskStatus } from "../types";
 
 type ColumnProps = {
-  status: TaskStatus; 
+  status: TaskStatus;
   title: string;
   tasks: Task[];
   onAdd?: () => void;
   onDelete: (id: string) => void;
 };
 
-export default function Column({ status,title, tasks, onAdd, onDelete }: ColumnProps) {
+export default function Column({ status, title, tasks, onAdd, onDelete }: ColumnProps) {
   const { setNodeRef } = useDroppable({ id: status });
 
   const bgColors: Record<string, string> = {
@@ -25,13 +26,13 @@ export default function Column({ status,title, tasks, onAdd, onDelete }: ColumnP
   return (
     <div
       ref={setNodeRef}
-      className={`p-4 rounded-xl w-full max-w-sm flex flex-col gap-4 border ${
+      className={`min-w-[280px] w-full sm:w-[300px] max-w-full flex-shrink-0 p-4 rounded-xl flex flex-col gap-4 border ${
         bgColors[title] ?? "bg-gray-50"
       }`}
     >
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h2 className="text-md font-bold text-gray-700">{title}</h2>
+        <h2 className="text-md sm:text-lg font-bold text-gray-700">{title}</h2>
         {title === "To-do" && onAdd && (
           <button
             className="p-1 text-gray-500 hover:text-gray-800"
