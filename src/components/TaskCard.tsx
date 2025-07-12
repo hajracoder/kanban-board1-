@@ -1,8 +1,9 @@
 
+
 import React from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { Github, Linkedin, Facebook, Trash2 } from "lucide-react";
-import { Task } from "../types"; // ✅ import the correct type
+import { Task } from "../types";
 
 type Props = {
   task: Task;
@@ -26,13 +27,13 @@ const TaskCard: React.FC<Props> = ({ task, onDelete }) => {
       {...listeners}
       {...attributes}
       style={style}
-      className="bg-white p-4 rounded-xl border border-gray-200 shadow-md hover:shadow-xl hover:scale-[1.02] transition-all duration-300 ease-in-out cursor-grab active:cursor-grabbing flex flex-col justify-between"
+      className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:scale-[1.01] transition-all duration-300 ease-in-out cursor-grab active:cursor-grabbing flex flex-col justify-between space-y-4"
     >
-      {/* Title and Description */}
+      {/* Title + Description */}
       <div>
-        <h3 className="text-lg font-bold text-gray-800">{task.title}</h3>
+        <h3 className="text-base sm:text-lg font-semibold text-gray-800">{task.title}</h3>
         {task.description && (
-          <p className="text-sm text-gray-600 mt-1">{task.description}</p>
+          <p className="text-sm text-gray-600 mt-1 line-clamp-3">{task.description}</p>
         )}
         {task.date && (
           <p className="text-xs text-gray-400 mt-2">📅 Due: {task.date}</p>
@@ -41,32 +42,33 @@ const TaskCard: React.FC<Props> = ({ task, onDelete }) => {
 
       {/* Avatar */}
       {task.avatar && (
-        <div className="mt-4 flex justify-start">
+        <div className="flex items-center gap-2">
           <img
             src="/images/s2.jpg"
             alt="Avatar"
-            className="w-10 h-10 rounded-full border border-gray-300 object-cover shadow-sm"
+            className="w-9 h-9 rounded-full border object-cover shadow-sm"
           />
+          <span className="text-xs text-gray-500 hidden sm:inline">Assigned</span>
         </div>
       )}
 
-      {/* Icons + Delete */}
-      <div className="mt-3 flex items-center justify-between">
-        {/* Socials */}
+      {/* Footer: Icons + Delete */}
+      <div className="flex items-center justify-between">
+        {/* Social icons */}
         <div className="flex gap-3 text-gray-500">
           {task.github && (
             <a href={task.github} target="_blank" rel="noopener noreferrer">
-              <Github className="w-4 h-4 hover:text-black" />
+              <Github className="w-4 h-4 hover:text-black transition" />
             </a>
           )}
           {task.linkedin && (
             <a href={task.linkedin} target="_blank" rel="noopener noreferrer">
-              <Linkedin className="w-4 h-4 hover:text-blue-600" />
+              <Linkedin className="w-4 h-4 hover:text-blue-600 transition" />
             </a>
           )}
           {task.facebook && (
             <a href={task.facebook} target="_blank" rel="noopener noreferrer">
-              <Facebook className="w-4 h-4 hover:text-blue-500" />
+              <Facebook className="w-4 h-4 hover:text-blue-500 transition" />
             </a>
           )}
         </div>
@@ -85,3 +87,4 @@ const TaskCard: React.FC<Props> = ({ task, onDelete }) => {
 };
 
 export default TaskCard;
+
