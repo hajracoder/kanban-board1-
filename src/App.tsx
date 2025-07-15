@@ -1,45 +1,59 @@
+import { useEffect, useState } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate
+} from "react-router-dom";
 
-import React, { useEffect } from "react";
-import './App.css';
 import Header from './components/Header';
 import MainLayout from './components/MainLayout';
 import KanbanBoard from './components/KanbanBoard';
+import ProtectedRoute from "./components/ProtectedRoute";
+import Auth from "./components/Auth";
 
-import { databases, DATABASE_ID, COLLECTION_ID } from "./appwrite/appwrite";
-import { ID } from "appwrite";
+import './App.css';
+import { account } from "./appwrite/appwrite";
 
 export default function App() {
-useEffect(() => {
-  const createDoc = async () => {
-    try {
-      const res = await databases.createDocument(
-        DATABASE_ID,
-        COLLECTION_ID,
-        ID.unique(),
-        {
-          title: "React Task",                     // ✅ Required string
-          description: "Created from React app",   // ✅ Optional
-          date: new Date().toISOString().split("T")[0], // ✅ Optional if added in schema
-          status: "To-do",                         // ✅ Required enum
-        }
-      );
-      console.log("✅ Document created:", res);
-    } catch (error: any) {
-      console.error("❌ Error from Appwrite:", error.message, error);
-    }
-  };
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
-  createDoc();
-}, []);
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        await account.get();
+        setIsLoggedIn(true);
+      } catch {
+        setIsLoggedIn(false);
+      }
+    };
+    checkSession();
+  }, []);
 
-
+  if (isLoggedIn === null) return <div className="p-10">Loading...</div>;
 
   return (
-    <>
-      <Header />
-      <MainLayout>
-        <KanbanBoard />
-      </MainLayout>
-    </>
+    <Router>
+      <Routes>
+        {/* ✅ Auth page with both login/signup */}
+        <Route path="/auth" element={<Auth />} />
+
+        {/* ✅ Protected Home */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Header />
+              <MainLayout>
+                <KanbanBoard />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ✅ Redirect anything else to /auth */}
+        <Route path="*" element={<Navigate to="/auth" />} />
+      </Routes>
+    </Router>
   );
 }

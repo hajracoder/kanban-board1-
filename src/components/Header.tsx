@@ -1,12 +1,31 @@
-
 import React, { useState } from "react";
-import { Search, Bell, Settings, Lock, MoreVertical, X } from "lucide-react";
+import {
+  Search,
+  Bell,
+  Settings,
+  Lock,
+  MoreVertical,
+  X,
+  LogOut,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { account } from "../appwrite/appwrite";
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await account.deleteSession("current");
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   return (
-    <header className="px-4 sm:px-6 py-4 border-b bg-white shadow-sm sticky top-0 z-50  ">
+    <header className="px-4 sm:px-6 py-4 border-b bg-white shadow-sm sticky top-0 z-50">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         {/* Top Row */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-3 sm:gap-0">
@@ -17,20 +36,21 @@ export default function Header() {
               Kanban
             </h1>
 
-            {/* Mobile Dots */}
+            {/* Mobile Menu Button */}
             <div className="sm:hidden relative">
               <button onClick={() => setMenuOpen(!menuOpen)}>
                 <MoreVertical className="w-6 h-6 text-gray-700" />
               </button>
 
               {menuOpen && (
-                <div className="absolute right-0 mt-2 w-40 bg-white border rounded-lg shadow-lg z-50 p-4">
+                <div className="absolute right-0 mt-2 w-44 bg-white border rounded-lg shadow-lg z-50 p-4">
                   <button
                     onClick={() => setMenuOpen(false)}
                     className="absolute top-1 right-1 text-gray-400 hover:text-black"
                   >
                     <X className="w-4 h-4" />
                   </button>
+
                   <button className="flex items-center gap-2 mb-2 text-gray-700 hover:text-blue-600">
                     <Lock className="w-4 h-4" />
                     Share
@@ -39,9 +59,18 @@ export default function Header() {
                     <Settings className="w-4 h-4" />
                     Settings
                   </button>
-                  <button className="flex items-center gap-2 text-gray-700 hover:text-blue-600">
+                  <button className="flex items-center gap-2 mb-2 text-gray-700 hover:text-blue-600">
                     <Bell className="w-4 h-4" />
                     Alerts
+                  </button>
+
+                  {/* ✅ Logout Button in mobile */}
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 text-red-600 hover:text-red-800"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
                   </button>
                 </div>
               )}
@@ -68,6 +97,15 @@ export default function Header() {
             </button>
             <Settings className="w-5 h-5 text-gray-600 hover:text-black cursor-pointer transition" />
             <Bell className="w-5 h-5 text-gray-600 hover:text-black cursor-pointer transition" />
+
+            {/* ✅ Logout Button in desktop */}
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 text-red-600 hover:text-red-800 text-sm"
+            >
+              <LogOut className="w-5 h-5" />
+              Logout
+            </button>
           </div>
         </div>
       </div>
