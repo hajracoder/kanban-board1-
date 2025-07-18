@@ -9,21 +9,22 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+ const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
 
-    try {
-      await account.createEmailPasswordSession(email, password);
-      console.log("✅ Logged in successfully");
-      navigate("/"); // Redirect after login
-    } catch (error: any) {
-      console.error("❌ Login failed:", error);
-      alert("Login failed: " + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    await account.createEmailPasswordSession(email, password);
+    console.log("✅ Logged in successfully");
+    window.location.href = "/"; // force re-check session
+  } catch (error: any) {
+    console.error("❌ Login failed:", error);
+    alert("Login failed: " + error.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
