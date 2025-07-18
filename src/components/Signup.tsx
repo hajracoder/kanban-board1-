@@ -1,6 +1,7 @@
+
+
 import React, { useState } from "react";
-import { account } from "../appwrite/appwrite";
-import { ID } from "appwrite";
+import { account, ID } from "../appwrite/appwrite";
 import { useNavigate } from "react-router-dom";
 
 export default function Signup() {
@@ -8,27 +9,32 @@ export default function Signup() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
 
     try {
+      // ✅ Step 1: Logout if already logged in
+      await account.deleteSession("current");
+
+      // ✅ Step 2: Create new user account
       const userId = ID.unique();
-      console.log("🟢 Creating user with ID:", userId);
-
-      // ✅ Create the account
       const createdUser = await account.create(userId, email, password, name);
-      console.log("✅ Account created:", createdUser);
+      console.log("✅ User created:", createdUser);
 
-      // ✅ Create session (log user in)
+      // ✅ Step 3: Create session (login)
       const session = await account.createEmailPasswordSession(email, password);
-      console.log("✅ Session created:", session);
+      console.log("✅ Logged in:", session);
 
-      // ✅ Redirect to home page
+      // ✅ Step 4: Redirect to home
       navigate("/");
     } catch (err: any) {
-      console.error("❌ Signup error:", err.message);
+      console.error("❌ Signup error:", err);
       alert("Signup failed: " + err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -47,6 +53,7 @@ export default function Signup() {
           onChange={(e) => setName(e.target.value)}
           className="w-full border px-3 py-2 rounded"
           required
+          autoComplete="name"
         />
 
         <input
@@ -56,6 +63,7 @@ export default function Signup() {
           onChange={(e) => setEmail(e.target.value)}
           className="w-full border px-3 py-2 rounded"
           required
+          autoComplete="email"
         />
 
         <input
@@ -65,13 +73,15 @@ export default function Signup() {
           onChange={(e) => setPassword(e.target.value)}
           className="w-full border px-3 py-2 rounded"
           required
+          autoComplete="new-password"
         />
 
         <button
           type="submit"
+          disabled={loading}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
         >
-          Sign Up
+          {loading ? "Creating..." : "Sign Up"}
         </button>
       </form>
     </div>
