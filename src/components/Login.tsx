@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { account } from "../appwrite/appwrite";
 import { useNavigate } from "react-router-dom";
@@ -5,43 +6,57 @@ import { useNavigate } from "react-router-dom";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+
     try {
-      await account.createEmailPasswordSession(email, password); // ✅ Correct method
-      navigate("/"); // Redirect on success
-    } catch (err: any) {
-      alert(err.message); // Show error
+      await account.createEmailPasswordSession(email, password);
+      console.log("✅ Logged in successfully");
+      navigate("/"); // Redirect after login
+    } catch (error: any) {
+      console.error("❌ Login failed:", error);
+      alert("Login failed: " + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-100">
-      <form onSubmit={handleLogin} className="bg-white p-6 rounded shadow-md w-80">
-        <h2 className="text-xl font-bold mb-4">Login</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+      <form
+        onSubmit={handleLogin}
+        className="bg-white p-6 rounded-lg shadow-md w-full max-w-sm space-y-4"
+      >
+        <h2 className="text-xl font-bold text-center text-gray-800">Login</h2>
+
         <input
           type="email"
           placeholder="Email"
-          className="w-full mb-3 p-2 border rounded"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          className="w-full border px-3 py-2 rounded"
           required
         />
+
         <input
           type="password"
           placeholder="Password"
-          className="w-full mb-3 p-2 border rounded"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          className="w-full border px-3 py-2 rounded"
           required
+          autoComplete="current-password"
         />
+
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
         >
-          Login
+          {loading ? "Logging in..." : "Login"}
         </button>
       </form>
     </div>
