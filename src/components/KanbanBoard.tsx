@@ -46,44 +46,50 @@ export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
   }, []);
 
   // Add new task
-  const handleAddTask = async (data: {
-    title: string;
-    description?: string;
-    date?: string;
-    ownerId: string;
-    ownerName: string;
-  }) => {
-    try {
-      const createdDoc = await databases.createDocument(
-        DATABASE_ID,
-        COLLECTION_ID,
-        ID.unique(),
-        {
-          title: data.title,
-          description: data.description,
-          date: data.date,
-          status: "to-do",
-          ownerId: data.ownerId,
-          ownerName: data.ownerName,
-        }
-      );
+ const handleAddTask = async (data: {
+  title: string;
+  description?: string;
+  date?: string;
+  ownerId: string;      // Ye zaruri hai
+  ownerName: string;
+}) => {
+  try {
+    const createdDoc = await databases.createDocument(
+      DATABASE_ID,
+      COLLECTION_ID,
+      ID.unique(),
+      {
+        title: data.title,
+        description: data.description,
+        date: data.date,
+        status: "to-do",
+        ownerId: data.ownerId,    // Yahan bhi bhejna hai
+        ownerName: data.ownerName,
+      }
+    );
 
-      const newTask: Task = {
-        id: createdDoc.$id,
-        title: createdDoc.title,
-        description: createdDoc.description,
-        date: createdDoc.date,
-        status: createdDoc.status,
-        ownerId: createdDoc.ownerId,
-        ownerName: createdDoc.ownerName,
-      };
+    const newTask: Task = {
+      id: createdDoc.$id,
+      title: createdDoc.title,
+      description: createdDoc.description,
+      date: createdDoc.date,
+      status: createdDoc.status,
+      ownerId: createdDoc.ownerId,
+      ownerName: createdDoc.ownerName,
+    };
 
-      setTasks((prev) => [...prev, newTask]);
-    } catch (err) {
-      console.error("Failed to save task:", err);
-      alert("Failed to save task. Please try again.");
-    }
-  };
+    setTasks((prev) => [...prev, newTask]);
+  } catch (err) {
+    console.error("Failed to save task:", err);
+    alert("Failed to save task. Please try again.");
+  }
+};
+
+
+      
+
+   
+ 
 
   // Drag and drop update
   const handleDragEnd = async (event: DragEndEvent) => {
