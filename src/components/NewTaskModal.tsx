@@ -32,7 +32,7 @@ export default function AddTaskModal({ onAdd, onClose, users }: Props) {
 
     const selectedUser = users.find((u) => u.userId === selectedUserId);
     if (!selectedUser) {
-      alert("Invalid user");
+      alert("Invalid user selected");
       return;
     }
 
@@ -40,8 +40,8 @@ export default function AddTaskModal({ onAdd, onClose, users }: Props) {
       title: title.trim(),
       description: description.trim(),
       date,
-      ownerId: selectedUserId,
-      ownerName: selectedUser.name,  // Correct here
+      ownerId: selectedUser.userId,
+      ownerName: selectedUser.name,
     });
 
     onClose();
