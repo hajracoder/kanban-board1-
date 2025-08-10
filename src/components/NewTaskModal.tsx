@@ -36,14 +36,13 @@ export default function AddTaskModal({ onAdd, onClose, users }: Props) {
       return;
     }
 
-   onAdd({
-  title: title.trim(),
-  description: description.trim(),
-  date,
-  ownerId: selectedUserId,     // selected user ID yahan bhejo
-  ownerName: selectedUserName,
-});
-
+    onAdd({
+      title: title.trim(),
+      description: description.trim(),
+      date,
+      ownerId: selectedUserId,
+      ownerName: selectedUser.name,  // Correct here
+    });
 
     onClose();
     setTitle("");
@@ -95,7 +94,6 @@ export default function AddTaskModal({ onAdd, onClose, users }: Props) {
           />
         </div>
 
-        {/* User Dropdown */}
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-1">
             Assign To
@@ -134,78 +132,3 @@ export default function AddTaskModal({ onAdd, onClose, users }: Props) {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// import React, { useState } from "react";
-
-// type Props = {
-//   onAdd: (data: { title: string; description?: string; date?: string }) => void;
-//   onClose: () => void;
-// };
-
-// export default function AddTaskModal({ onAdd, onClose }: Props) {
-//   const [title, setTitle] = useState("");
-//   const [description, setDescription] = useState("");
-//   const [date, setDate] = useState("");
-
-//   const handleSubmit = () => {
-//     if (!title.trim()) return;
-//     onAdd({ title, description, date });
-//     onClose();
-//   };
-
-//   return (
-//     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
-//       <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-lg space-y-4">
-//         <h2 className="text-xl font-semibold">Add New Task</h2>
-//         <input
-//           type="text"
-//           placeholder="Title"
-//           className="w-full border p-2 rounded"
-//           value={title}
-//           onChange={(e) => setTitle(e.target.value)}
-//         />
-//         <textarea
-//           placeholder="Description"
-//           className="w-full border p-2 rounded"
-//           value={description}
-//           onChange={(e) => setDescription(e.target.value)}
-//         />
-//         <input
-//           type="date"
-//           className="w-full border p-2 rounded"
-//           value={date}
-//           onChange={(e) => setDate(e.target.value)}
-//         />
-//         <div className="flex justify-end gap-2 pt-2">
-//           <button
-//             onClick={onClose}
-//             className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded"
-//           >
-//             Cancel
-//           </button>
-//           <button
-//             onClick={handleSubmit}
-//             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
-//           >
-//             Add
-//           </button>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
