@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { databases, DATABASE_ID, COLLECTION_ID, USERS_COLLECTION_ID } from "../appwrite/appwrite";
+import { databases, DATABASE_ID, COLLECTION_ID } from "../appwrite/appwrite";
 import AddTaskModal from "./NewTaskModal";
 import Column from "./Column";
 import { Task, User, TaskStatus } from "../types";
@@ -22,7 +22,7 @@ export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showModal, setShowModal] = useState(false);
 
-  // Load tasks from Appwrite
+  // Fetch tasks
   const loadTasks = async () => {
     try {
       const res = await databases.listDocuments(DATABASE_ID, COLLECTION_ID);
@@ -53,6 +53,8 @@ export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
     ownerId: string;
     ownerName: string;
   }) => {
+    console.log("Creating task with data:", data); // Debug log
+
     try {
       const createdDoc = await databases.createDocument(
         DATABASE_ID,
@@ -60,11 +62,11 @@ export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
         ID.unique(),
         {
           title: data.title,
-          description: data.description,
-          date: data.date,
           status: "to-do",
           ownerId: data.ownerId,
           ownerName: data.ownerName,
+          description: data.description,
+          date: data.date,
         }
       );
 
@@ -85,7 +87,7 @@ export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
     }
   };
 
-  // Drag and drop handler
+  // Drag and drop update
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -95,26 +97,19 @@ export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
     if (!taskToUpdate) return;
 
     setTasks((prev) =>
-      prev.map((task) =>
-        task.id === active.id ? { ...task, status: newStatus } : task
-      )
+      prev.map((task) => (task.id === active.id ? { ...task, status: newStatus } : task))
     );
 
     try {
       await databases.updateDocument(DATABASE_ID, COLLECTION_ID, String(active.id), {
         status: newStatus,
-        ownerId: taskToUpdate.ownerId,
-        ownerName: taskToUpdate.ownerName,
-        title: taskToUpdate.title,
-        description: taskToUpdate.description ?? "",
-        date: taskToUpdate.date ?? "",
       });
     } catch (err) {
       console.error("Failed to update status:", err);
     }
   };
 
-  // Delete task handler
+  // Delete task
   const handleDelete = async (id: string) => {
     try {
       await databases.deleteDocument(DATABASE_ID, COLLECTION_ID, id);
