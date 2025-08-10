@@ -40,7 +40,7 @@ export default function AddTaskModal({ onAdd, onClose, users }: Props) {
       title: title.trim(),
       description: description.trim(),
       date,
-      ownerId: selectedUser.userId,
+      ownerId: selectedUser.$id,
       ownerName: selectedUser.name,
     });
 
