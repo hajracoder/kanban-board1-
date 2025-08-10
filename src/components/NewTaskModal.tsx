@@ -36,13 +36,14 @@ export default function AddTaskModal({ onAdd, onClose, users }: Props) {
       return;
     }
 
-    onAdd({
-      title: title.trim(),
-      description: description.trim(),
-      date,
-      ownerId: selectedUser.userId,
-      ownerName: selectedUser.name,
-    });
+   onAdd({
+  title: title.trim(),
+  description: description.trim(),
+  date,
+  ownerId: selectedUserId,     // selected user ID yahan bhejo
+  ownerName: selectedUserName,
+});
+
 
     onClose();
     setTitle("");
