@@ -11,7 +11,6 @@ type Props = {
   }) => void;
   onClose: () => void;
   users: User[];
-  refreshUsers: () => Promise<void>;
 };
 
 export default function AddTaskModal({ onAdd, onClose, users }: Props) {
@@ -30,7 +29,7 @@ export default function AddTaskModal({ onAdd, onClose, users }: Props) {
       return;
     }
 
-    const selectedUser = users.find((u) => u.userId === selectedUserId);
+    const selectedUser = users.find((u) => u.$id === selectedUserId);
     if (!selectedUser) {
       alert("Invalid user selected");
       return;
@@ -57,9 +56,7 @@ export default function AddTaskModal({ onAdd, onClose, users }: Props) {
         <h2 className="text-2xl font-bold text-gray-800">📝 Add New Task</h2>
 
         <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Title
-          </label>
+          <label className="block text-sm font-medium text-gray-600 mb-1">Title</label>
           <input
             type="text"
             placeholder="e.g. Build Kanban Board"
@@ -70,9 +67,7 @@ export default function AddTaskModal({ onAdd, onClose, users }: Props) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Description
-          </label>
+          <label className="block text-sm font-medium text-gray-600 mb-1">Description</label>
           <textarea
             placeholder="Optional notes or details"
             value={description}
@@ -83,9 +78,7 @@ export default function AddTaskModal({ onAdd, onClose, users }: Props) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Due Date
-          </label>
+          <label className="block text-sm font-medium text-gray-600 mb-1">Due Date</label>
           <input
             type="date"
             value={date}
@@ -95,9 +88,7 @@ export default function AddTaskModal({ onAdd, onClose, users }: Props) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Assign To
-          </label>
+          <label className="block text-sm font-medium text-gray-600 mb-1">Assign To</label>
           <select
             required
             value={selectedUserId}
@@ -106,7 +97,7 @@ export default function AddTaskModal({ onAdd, onClose, users }: Props) {
           >
             <option value="">Select user</option>
             {users.map((user) => (
-              <option key={user.$id} value={user.userId}>
+              <option key={user.$id} value={user.$id}>
                 {user.name}
               </option>
             ))}
