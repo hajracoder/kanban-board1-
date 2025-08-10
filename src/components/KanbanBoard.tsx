@@ -22,7 +22,7 @@ export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showModal, setShowModal] = useState(false);
 
-  // Fetch tasks
+  // Load tasks from Appwrite
   const loadTasks = async () => {
     try {
       const res = await databases.listDocuments(DATABASE_ID, COLLECTION_ID);
@@ -45,53 +45,47 @@ export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
     loadTasks();
   }, []);
 
-  // Add new task
- const handleAddTask = async (data: {
-  title: string;
-  description?: string;
-  date?: string;
-  ownerId: string;      // Ye zaruri hai
-  ownerName: string;
-}) => {
-  try {
-    const createdDoc = await databases.createDocument(
-      DATABASE_ID,
-      COLLECTION_ID,
-      ID.unique(),
-      {
-        title: data.title,
-        description: data.description,
-        date: data.date,
-        status: "to-do",
-        ownerId: data.ownerId,    // Yahan bhi bhejna hai
-        ownerName: data.ownerName,
-      }
-    );
+  // Add new task handler
+  const handleAddTask = async (data: {
+    title: string;
+    description?: string;
+    date?: string;
+    ownerId: string;
+    ownerName: string;
+  }) => {
+    try {
+      const createdDoc = await databases.createDocument(
+        DATABASE_ID,
+        COLLECTION_ID,
+        ID.unique(),
+        {
+          title: data.title,
+          description: data.description,
+          date: data.date,
+          status: "to-do",
+          ownerId: data.ownerId,
+          ownerName: data.ownerName,
+        }
+      );
 
-    const newTask: Task = {
-      id: createdDoc.$id,
-      title: createdDoc.title,
-      description: createdDoc.description,
-      date: createdDoc.date,
-      status: createdDoc.status,
-      ownerId: createdDoc.ownerId,
-      ownerName: createdDoc.ownerName,
-    };
+      const newTask: Task = {
+        id: createdDoc.$id,
+        title: createdDoc.title,
+        description: createdDoc.description,
+        date: createdDoc.date,
+        status: createdDoc.status,
+        ownerId: createdDoc.ownerId,
+        ownerName: createdDoc.ownerName,
+      };
 
-    setTasks((prev) => [...prev, newTask]);
-  } catch (err) {
-    console.error("Failed to save task:", err);
-    alert("Failed to save task. Please try again.");
-  }
-};
+      setTasks((prev) => [...prev, newTask]);
+    } catch (err) {
+      console.error("Failed to save task:", err);
+      alert("Failed to save task. Please try again.");
+    }
+  };
 
-
-      
-
-   
- 
-
-  // Drag and drop update
+  // Drag and drop handler
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -101,19 +95,26 @@ export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
     if (!taskToUpdate) return;
 
     setTasks((prev) =>
-      prev.map((task) => (task.id === active.id ? { ...task, status: newStatus } : task))
+      prev.map((task) =>
+        task.id === active.id ? { ...task, status: newStatus } : task
+      )
     );
 
     try {
       await databases.updateDocument(DATABASE_ID, COLLECTION_ID, String(active.id), {
         status: newStatus,
+        ownerId: taskToUpdate.ownerId,
+        ownerName: taskToUpdate.ownerName,
+        title: taskToUpdate.title,
+        description: taskToUpdate.description ?? "",
+        date: taskToUpdate.date ?? "",
       });
     } catch (err) {
       console.error("Failed to update status:", err);
     }
   };
 
-  // Delete task
+  // Delete task handler
   const handleDelete = async (id: string) => {
     try {
       await databases.deleteDocument(DATABASE_ID, COLLECTION_ID, id);
