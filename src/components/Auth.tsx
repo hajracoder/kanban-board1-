@@ -1,7 +1,25 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import React, { useState } from "react";
-import { account } from "../appwrite/appwrite";
+import { account, databases } from "../appwrite/appwrite";
 import { ID } from "appwrite";
 import { useNavigate } from "react-router-dom";
+
+const DATABASE_ID = "686e61c50031482b748c";
+const USERS_COLLECTION_ID = "6890fa640015b8830dfa";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -15,13 +33,29 @@ export default function Auth() {
     e.preventDefault();
     try {
       if (isLogin) {
+        // 🔹 Login existing user
         await account.createEmailPasswordSession(email, password);
       } else {
+        // 🔹 Create new user in Auth
         const userId = ID.unique();
-        await account.create(userId, email, password, name);
+        const newUser = await account.create(userId, email, password, name);
+
+        // 🔹 Store in Users collection for dropdown
+        await databases.createDocument(
+          "686e61c50031482b748c",
+          "6890fa640015b8830dfa",
+          ID.unique(),
+          {
+            userId: newUser.$id, // Appwrite Auth user ID
+            name: name,
+            email: email,
+          }
+        );
+
+        // 🔹 Auto-login
         await account.createEmailPasswordSession(email, password);
       }
-      navigate("/"); // ✅ redirect to home
+      navigate("/"); // ✅ Redirect after login/signup
     } catch (err: any) {
       alert(err.message);
     }

@@ -120,6 +120,7 @@
 
 
 
+
 import React, { useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { Trash2 } from "lucide-react";
@@ -223,4 +224,6 @@ const TaskCard: React.FC<Props> = ({ task, onDelete }) => {
   );
 };
 
+
 export default TaskCard;
+

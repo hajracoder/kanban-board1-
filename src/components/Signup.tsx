@@ -1,60 +1,165 @@
 
+// import React, { useState } from "react";
+// import { account, databases, ID } from "../appwrite/appwrite";
+// import { useNavigate } from "react-router-dom";
+
+// const Signup = () => {
+//   const navigate = useNavigate();
+//   const [name, setName] = useState("");
+//   const [email, setEmail] = useState("");
+//   const [password, setPassword] = useState("");
+
+//   const handleSignup = async (e: React.FormEvent) => {
+//     e.preventDefault();
+
+//     try {
+//       // 1. Create user account
+//       const userAccount = await account.create(
+//         ID.unique(),
+//         email,
+//         password,
+//         name
+//       );
+//       console.log("✅ Account created:", userAccount);
+
+//       // 2. Create session (login)
+//       const session = await account.createEmailPasswordSession(email, password);
+//       console.log("✅ Logged in:", session);
+
+//       // 3. Add user to USERS collection with userId from account
+//       await databases.createDocument(
+//         import.meta.env.VITE_APPWRITE_DATABASE_ID,
+//         import.meta.env.VITE_APPWRITE_COLLECTION_ID_USERS, // Correct USERS collection ID
+//         userAccount.$id, // Use user id as document id
+//         {
+//           userId: userAccount.$id,
+//           name: name,
+//           email: email,
+//         }
+//       );
+//       console.log("✅ User added to USERS collection");
+
+//       // 4. Redirect to home or dashboard
+//       navigate("/");
+//     } catch (error) {
+//       console.error("❌ Signup error:", error);
+//       alert("Signup failed. Check console.");
+//     }
+//   };
+
+//   return (
+//     <div className="min-h-screen flex justify-center items-center bg-gray-100 p-4">
+//       <form onSubmit={handleSignup} className="bg-white p-6 rounded-lg shadow-md w-full max-w-sm">
+//         <h2 className="text-2xl font-semibold mb-4 text-center">Sign Up</h2>
+
+//         <input
+//           type="text"
+//           placeholder="Name"
+//           value={name}
+//           onChange={(e) => setName(e.target.value)}
+//           className="w-full p-2 mb-3 border rounded"
+//           required
+//         />
+
+//         <input
+//           type="email"
+//           placeholder="Email"
+//           value={email}
+//           onChange={(e) => setEmail(e.target.value)}
+//           className="w-full p-2 mb-3 border rounded"
+//           required
+//         />
+
+//     <input
+//   type="password"
+//   autoComplete="current-password"  // <-- camelCase here
+//   placeholder="Password"
+//   className="w-full bg-slate-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+//   required
+//   value={password}
+//   onChange={(e) => setPassword(e.target.value)}
+// />
+
+
+
+//         <button
+//           type="submit"
+//           className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition"
+//         >
+//           Create Account
+//         </button>
+//       </form>
+//     </div>
+//   );
+// };
+
+// export default Signup;
+
+
+
 
 
 
 
 import React, { useState } from "react";
-import { account, ID } from "../appwrite/appwrite";
+import { account, databases, ID } from "../appwrite/appwrite";
 import { useNavigate } from "react-router-dom";
 
-export default function Signup() {
+const Signup = () => {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
 
     try {
-      // ✅ Step 1: Logout if already logged in
-      await account.deleteSession("current");
+      // 1. Create user account
+      const userAccount = await account.create(
+        ID.unique(),
+        email,
+        password,
+        name
+      );
+      console.log("✅ Account created:", userAccount);
 
-      // ✅ Step 2: Create new user account
-      const userId = ID.unique();
-      const createdUser = await account.create(userId, email, password, name);
-      console.log("✅ User created:", createdUser);
+      // 2. Create session (login)
+      await account.createEmailPasswordSession(email, password);
+      console.log("✅ Logged in");
 
-      // ✅ Step 3: Create session (login)
-      const session = await account.createEmailPasswordSession(email, password);
-      console.log("✅ Logged in:", session);
+      // 3. Add user to USERS collection with userId from account
+      await databases.createDocument(
+        import.meta.env.VITE_APPWRITE_DATABASE_ID,
+        import.meta.env.VITE_APPWRITE_COLLECTION_ID_USERS, // USERS collection ID
+        userAccount.$id, // user id as document id
+        {
+          userId: userAccount.$id,
+          name: name,
+          email: email,
+        }
+      );
+      console.log("✅ User added to USERS collection");
 
-      // ✅ Step 4: Redirect to home
+      // 4. Redirect to home or dashboard
       navigate("/");
-    } catch (err: any) {
-      console.error("❌ Signup error:", err);
-      alert("Signup failed: " + err.message);
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error("❌ Signup error:", error);
+      alert("Signup failed. Check console.");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <form
-        onSubmit={handleSignup}
-        className="bg-white p-6 rounded-lg shadow-md w-full max-w-sm space-y-4"
-      >
-        <h2 className="text-xl font-bold text-center text-gray-800">Create Account</h2>
+    <div className="min-h-screen flex justify-center items-center bg-gray-100 p-4">
+      <form onSubmit={handleSignup} className="bg-white p-6 rounded-lg shadow-md w-full max-w-sm">
+        <h2 className="text-2xl font-semibold mb-4 text-center">Sign Up</h2>
 
         <input
           type="text"
-          placeholder="Full Name"
+          placeholder="Name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full border px-3 py-2 rounded"
+          className="w-full p-2 mb-3 border rounded"
           required
           autoComplete="name"
         />
@@ -64,29 +169,30 @@ export default function Signup() {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full border px-3 py-2 rounded"
+          className="w-full p-2 mb-3 border rounded"
           required
           autoComplete="email"
         />
 
         <input
           type="password"
-          placeholder="Password (min 8 characters)"
+          autoComplete="new-password"
+          placeholder="Password"
+          className="w-full bg-slate-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full border px-3 py-2 rounded"
-          required
-          autoComplete="new-password"
         />
 
         <button
           type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
+          className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition mt-4"
         >
-          {loading ? "Creating..." : "Sign Up"}
+          Create Account
         </button>
       </form>
     </div>
   );
-}
+};
+
+export default Signup;

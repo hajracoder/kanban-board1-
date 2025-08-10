@@ -1,129 +1,24 @@
-// import React, { useState } from "react";
-
-// type Props = {
-//   onAdd: (task: { title: string; description: string; date: string }) => void;
-//   onClose: () => void;
-// };
-
-// export default function AddTaskModal({ onAdd, onClose }: Props) {
-//   const [title, setTitle] = useState("");
-//   const [description, setDescription] = useState("");
-//   const [date, setDate] = useState("");
-
-//   const handleSubmit = () => {
-//     if (!title.trim()) {
-//       alert("Please enter a valid title");
-//       return;
-//     }
-
-//     onAdd({ title: title.trim(), description: description.trim(), date });
-//     onClose();
-//     setTitle("");
-//     setDescription("");
-//     setDate("");
-//   };
-
-//   return (
-//     <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-center px-4">
-//       <div className="w-full max-w-md rounded-3xl bg-white/90 shadow-2xl border border-gray-200 backdrop-blur-lg p-6 sm:p-8 space-y-5 animate-fade-in">
-//         {/* Header */}
-//         <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-//           📝 Add New Task
-//         </h2>
-
-//         {/* Title */}
-//         <div>
-//           <label className="block text-sm font-medium text-gray-600 mb-1">Title</label>
-//           <input
-//             type="text"
-//             placeholder="e.g. Build Kanban Board"
-//             value={title}
-//             onChange={(e) => setTitle(e.target.value)}
-//             className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
-//           />
-//         </div>
-
-//         {/* Description */}
-//         <div>
-//           <label className="block text-sm font-medium text-gray-600 mb-1">Description</label>
-//           <textarea
-//             placeholder="Optional notes or details"
-//             value={description}
-//             onChange={(e) => setDescription(e.target.value)}
-//             className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none bg-white"
-//             rows={3}
-//           />
-//         </div>
-
-//         {/* Date */}
-//         <div>
-//           <label className="block text-sm font-medium text-gray-600 mb-1">Due Date</label>
-//           <input
-//             type="date"
-//             value={date}
-//             onChange={(e) => setDate(e.target.value)}
-//             className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
-//           />
-//         </div>
-
-//         {/* Buttons */}
-//         <div className="flex justify-end gap-3 pt-2">
-//           <button
-//             onClick={onClose}
-//             className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 hover:underline"
-//           >
-//             Cancel
-//           </button>
-//           <button
-//             onClick={handleSubmit}
-//             disabled={!title.trim()}
-//             className="px-5 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-medium rounded-lg hover:opacity-90 transition disabled:opacity-50"
-//           >
-//             Add Task
-//           </button>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import React, { useState } from "react";
+import { User } from "../types";
 
 type Props = {
-  onAdd: (task: { title: string; description: string; date: string; ownerId: string; ownerName: string }) => void;
+  onAdd: (task: {
+    title: string;
+    description?: string;
+    date?: string;
+    ownerId: string;
+    ownerName: string;
+  }) => void;
   onClose: () => void;
   users: User[];
-  refreshUsers: () => void;
+  refreshUsers: () => Promise<void>;
 };
 
-type User = {
-  $id: string;
-  userId: string;
-  name: string;
-  email: string;
-};
-
-export default function AddTaskModal({ onAdd, onClose, users, refreshUsers }: Props) {
+export default function AddTaskModal({ onAdd, onClose, users }: Props) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
   const [selectedUserId, setSelectedUserId] = useState("");
-  const [selectedUserName, setSelectedUserName] = useState("");
 
   const handleSubmit = () => {
     if (!title.trim()) {
@@ -135,39 +30,36 @@ export default function AddTaskModal({ onAdd, onClose, users, refreshUsers }: Pr
       return;
     }
 
+    const selectedUser = users.find((u) => u.userId === selectedUserId);
+    if (!selectedUser) {
+      alert("Invalid user");
+      return;
+    }
+
     onAdd({
       title: title.trim(),
       description: description.trim(),
       date,
-      ownerId: selectedUserId,
-      ownerName: selectedUserName,
+      ownerId: selectedUser.userId,
+      ownerName: selectedUser.name,
     });
 
     onClose();
-    refreshUsers(); // Refresh user list after closing modal
-
     setTitle("");
     setDescription("");
     setDate("");
     setSelectedUserId("");
-    setSelectedUserName("");
-  };
-
-  const handleUserChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const userId = e.target.value;
-    setSelectedUserId(userId);
-    const user = users.find((u) => u.userId === userId);
-    setSelectedUserName(user ? user.name : "");
   };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-center px-4">
       <div className="w-full max-w-md rounded-3xl bg-white/90 shadow-2xl border border-gray-200 backdrop-blur-lg p-6 sm:p-8 space-y-5 animate-fade-in">
-        <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">📝 Add New Task</h2>
+        <h2 className="text-2xl font-bold text-gray-800">📝 Add New Task</h2>
 
-        {/* Title */}
         <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">Title</label>
+          <label className="block text-sm font-medium text-gray-600 mb-1">
+            Title
+          </label>
           <input
             type="text"
             placeholder="e.g. Build Kanban Board"
@@ -177,9 +69,10 @@ export default function AddTaskModal({ onAdd, onClose, users, refreshUsers }: Pr
           />
         </div>
 
-        {/* Description */}
         <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">Description</label>
+          <label className="block text-sm font-medium text-gray-600 mb-1">
+            Description
+          </label>
           <textarea
             placeholder="Optional notes or details"
             value={description}
@@ -189,9 +82,10 @@ export default function AddTaskModal({ onAdd, onClose, users, refreshUsers }: Pr
           />
         </div>
 
-        {/* Date */}
         <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">Due Date</label>
+          <label className="block text-sm font-medium text-gray-600 mb-1">
+            Due Date
+          </label>
           <input
             type="date"
             value={date}
@@ -202,11 +96,13 @@ export default function AddTaskModal({ onAdd, onClose, users, refreshUsers }: Pr
 
         {/* User Dropdown */}
         <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">Assign To</label>
+          <label className="block text-sm font-medium text-gray-600 mb-1">
+            Assign To
+          </label>
           <select
             required
             value={selectedUserId}
-            onChange={handleUserChange}
+            onChange={(e) => setSelectedUserId(e.target.value)}
             className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 bg-white"
           >
             <option value="">Select user</option>
@@ -218,7 +114,6 @@ export default function AddTaskModal({ onAdd, onClose, users, refreshUsers }: Pr
           </select>
         </div>
 
-        {/* Buttons */}
         <div className="flex justify-end gap-3 pt-2">
           <button
             onClick={onClose}
@@ -239,3 +134,77 @@ export default function AddTaskModal({ onAdd, onClose, users, refreshUsers }: Pr
   );
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import React, { useState } from "react";
+
+// type Props = {
+//   onAdd: (data: { title: string; description?: string; date?: string }) => void;
+//   onClose: () => void;
+// };
+
+// export default function AddTaskModal({ onAdd, onClose }: Props) {
+//   const [title, setTitle] = useState("");
+//   const [description, setDescription] = useState("");
+//   const [date, setDate] = useState("");
+
+//   const handleSubmit = () => {
+//     if (!title.trim()) return;
+//     onAdd({ title, description, date });
+//     onClose();
+//   };
+
+//   return (
+//     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
+//       <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-lg space-y-4">
+//         <h2 className="text-xl font-semibold">Add New Task</h2>
+//         <input
+//           type="text"
+//           placeholder="Title"
+//           className="w-full border p-2 rounded"
+//           value={title}
+//           onChange={(e) => setTitle(e.target.value)}
+//         />
+//         <textarea
+//           placeholder="Description"
+//           className="w-full border p-2 rounded"
+//           value={description}
+//           onChange={(e) => setDescription(e.target.value)}
+//         />
+//         <input
+//           type="date"
+//           className="w-full border p-2 rounded"
+//           value={date}
+//           onChange={(e) => setDate(e.target.value)}
+//         />
+//         <div className="flex justify-end gap-2 pt-2">
+//           <button
+//             onClick={onClose}
+//             className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded"
+//           >
+//             Cancel
+//           </button>
+//           <button
+//             onClick={handleSubmit}
+//             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+//           >
+//             Add
+//           </button>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
