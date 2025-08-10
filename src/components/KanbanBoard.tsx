@@ -1,158 +1,125 @@
-import React, { useEffect, useState } from "react";
-import { databases, DATABASE_ID, COLLECTION_ID } from "../appwrite/appwrite";
-import AddTaskModal from "./NewTaskModal";
-import Column from "./Column";
-import { Task, User, TaskStatus } from "../types";
-import { ID } from "appwrite";
-import {
-  DndContext,
-  DragEndEvent,
-  MouseSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
+import React, { useState } from "react";
+import { User } from "../types";
 
-interface KanbanBoardProps {
-  users: User[];
-  refreshUsers: () => Promise<void>;
-}
-
-export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [showModal, setShowModal] = useState(false);
-
-  // Fetch tasks
-  const loadTasks = async () => {
-    try {
-      const res = await databases.listDocuments(DATABASE_ID, COLLECTION_ID);
-      const loadedTasks: Task[] = res.documents.map((doc) => ({
-        id: doc.$id,
-        title: doc.title,
-        description: doc.description,
-        date: doc.date,
-        status: doc.status,
-        ownerId: doc.ownerId ?? "",
-        ownerName: doc.ownerName ?? "",
-      }));
-      setTasks(loadedTasks);
-    } catch (err) {
-      console.error("Failed to load tasks:", err);
-    }
-  };
-
-  useEffect(() => {
-    loadTasks();
-  }, []);
-
-  // Add new task handler
-  const handleAddTask = async (data: {
+type Props = {
+  onAdd: (task: {
     title: string;
     description?: string;
     date?: string;
     ownerId: string;
     ownerName: string;
-  }) => {
-    console.log("Creating task with data:", data); // Debug log
+  }) => void;
+  onClose: () => void;
+  users: User[];
+};
 
-    try {
-      const createdDoc = await databases.createDocument(
-        DATABASE_ID,
-        COLLECTION_ID,
-        ID.unique(),
-        {
-          title: data.title,
-          status: "to-do",
-          ownerId: data.ownerId,
-          ownerName: data.ownerName,
-          description: data.description,
-          date: data.date,
-        }
-      );
+export default function AddTaskModal({ onAdd, onClose, users }: Props) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [date, setDate] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState("");
 
-      const newTask: Task = {
-        id: createdDoc.$id,
-        title: createdDoc.title,
-        description: createdDoc.description,
-        date: createdDoc.date,
-        status: createdDoc.status,
-        ownerId: createdDoc.ownerId,
-        ownerName: createdDoc.ownerName,
-      };
-
-      setTasks((prev) => [...prev, newTask]);
-    } catch (err) {
-      console.error("Failed to save task:", err);
-      alert("Failed to save task. Please try again.");
+  const handleSubmit = () => {
+    if (!title.trim()) {
+      alert("Please enter a valid title");
+      return;
     }
-  };
-
-  // Drag and drop update
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-
-    const newStatus = over.id as TaskStatus;
-    const taskToUpdate = tasks.find((task) => task.id === active.id);
-    if (!taskToUpdate) return;
-
-    setTasks((prev) =>
-      prev.map((task) => (task.id === active.id ? { ...task, status: newStatus } : task))
-    );
-
-    try {
-      await databases.updateDocument(DATABASE_ID, COLLECTION_ID, String(active.id), {
-        status: newStatus,
-      });
-    } catch (err) {
-      console.error("Failed to update status:", err);
+    if (!selectedUserId) {
+      alert("Please select a user to assign this task");
+      return;
     }
-  };
 
-  // Delete task
-  const handleDelete = async (id: string) => {
-    try {
-      await databases.deleteDocument(DATABASE_ID, COLLECTION_ID, id);
-      setTasks((prev) => prev.filter((task) => task.id !== id));
-    } catch (err) {
-      console.error("Failed to delete task:", err);
+    const selectedUser = users.find((u) => u.$id === selectedUserId);
+    if (!selectedUser) {
+      alert("Invalid user selected");
+      return;
     }
+
+    onAdd({
+      title: title.trim(),
+      description: description.trim(),
+      date,
+      ownerId: selectedUser.$id,
+      ownerName: selectedUser.name,
+    });
+
+    onClose();
+    setTitle("");
+    setDescription("");
+    setDate("");
+    setSelectedUserId("");
   };
-
-  const columns: { status: TaskStatus; title: string }[] = [
-    { status: "to-do", title: "To-do" },
-    { status: "progress", title: "In-progress" },
-    { status: "done", title: "Done" },
-  ];
-
-  const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor));
 
   return (
-    <>
-      <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-        <div className="flex flex-col lg:flex-row gap-4 px-2 py-4 sm:p-4 w-full max-w-full overflow-x-hidden">
-          {columns.map((col) => (
-            <Column
-              key={col.status}
-              status={col.status}
-              title={col.title}
-              tasks={tasks.filter((task) => task.status === col.status)}
-              onAdd={col.status === "to-do" ? () => setShowModal(true) : undefined}
-              onDelete={handleDelete}
-              setTasks={setTasks}
-            />
-          ))}
-        </div>
-      </DndContext>
+    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-center px-4">
+      <div className="w-full max-w-md rounded-3xl bg-white/90 shadow-2xl border border-gray-200 backdrop-blur-lg p-6 sm:p-8 space-y-5 animate-fade-in">
+        <h2 className="text-2xl font-bold text-gray-800">📝 Add New Task</h2>
 
-      {showModal && (
-        <AddTaskModal
-          onAdd={handleAddTask}
-          onClose={() => setShowModal(false)}
-          users={users}
-          refreshUsers={refreshUsers}
-        />
-      )}
-    </>
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-1">Title</label>
+          <input
+            type="text"
+            placeholder="e.g. Build Kanban Board"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-1">Description</label>
+          <textarea
+            placeholder="Optional notes or details"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none bg-white"
+            rows={3}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-1">Due Date</label>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-1">Assign To</label>
+          <select
+            required
+            value={selectedUserId}
+            onChange={(e) => setSelectedUserId(e.target.value)}
+            className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 bg-white"
+          >
+            <option value="">Select user</option>
+            {users.map((user) => (
+              <option key={user.$id} value={user.$id}>
+                {user.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex justify-end gap-3 pt-2">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 hover:underline"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={!title.trim() || !selectedUserId}
+            className="px-5 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-medium rounded-lg hover:opacity-90 transition disabled:opacity-50"
+          >
+            Add Task
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
