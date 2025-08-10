@@ -1,6 +1,19 @@
 
 
-export type TaskStatus = "to-do" | "progress" | "done";
+// export type TaskStatus = "to-do" | "progress" | "done";
+
+
+// export type Task = {
+//   id: string;
+//   title: string;
+//   description?: string;
+//   date?: string;
+//   status: TaskStatus;
+//   owner?: string;
+//   ownerName?: string; // ✅ Add this line
+// };
+
+
 
 
 export type Task = {
@@ -9,7 +22,18 @@ export type Task = {
   description?: string;
   date?: string;
   status: TaskStatus;
-  owner?: string;
-  ownerName?: string; // ✅ Add this line
+  // ownerId: string;    // Add this line
+  ownerName: string;  // Add this line
 };
+
+export type TaskStatus = "to-do" | "progress" | "done";
+
+export type User = {
+  $id: string;
+  userId: string;
+  name: string;
+  email: string;
+};
+
+
 
