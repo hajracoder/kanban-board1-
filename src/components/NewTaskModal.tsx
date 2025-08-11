@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { User } from "../types";
 
 type Props = {
@@ -11,26 +11,14 @@ type Props = {
   }) => void;
   onClose: () => void;
   users: User[];
-  currentUserId: string;
-  currentUserName: string;
+  refreshUsers: () => Promise<void>;
 };
 
-export default function AddTaskModal({
-  onAdd,
-  onClose,
-  users,
-  currentUserId,
-  currentUserName,
-}: Props) {
+export default function AddTaskModal({ onAdd, onClose, users }: Props) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
-  const [selectedUserId, setSelectedUserId] = useState(currentUserId);
-
-  // Update selected user when currentUserId changes (optional)
-  useEffect(() => {
-    setSelectedUserId(currentUserId);
-  }, [currentUserId]);
+  const [selectedUserId, setSelectedUserId] = useState("");
 
   const handleSubmit = () => {
     if (!title.trim()) {
@@ -42,9 +30,9 @@ export default function AddTaskModal({
       return;
     }
 
-    const selectedUser = users.find((u) => u.$id === selectedUserId);
+    const selectedUser = users.find((u) => u.userId === selectedUserId);
     if (!selectedUser) {
-      alert("Invalid user selected");
+      alert("Invalid user");
       return;
     }
 
@@ -52,7 +40,7 @@ export default function AddTaskModal({
       title: title.trim(),
       description: description.trim(),
       date,
-      ownerId: selectedUser.$id,
+      ownerId: selectedUser.userId,
       ownerName: selectedUser.name,
     });
 
@@ -60,7 +48,7 @@ export default function AddTaskModal({
     setTitle("");
     setDescription("");
     setDate("");
-    setSelectedUserId(currentUserId);
+    setSelectedUserId("");
   };
 
   return (
@@ -69,7 +57,9 @@ export default function AddTaskModal({
         <h2 className="text-2xl font-bold text-gray-800">📝 Add New Task</h2>
 
         <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">Title</label>
+          <label className="block text-sm font-medium text-gray-600 mb-1">
+            Title
+          </label>
           <input
             type="text"
             placeholder="e.g. Build Kanban Board"
@@ -80,7 +70,9 @@ export default function AddTaskModal({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">Description</label>
+          <label className="block text-sm font-medium text-gray-600 mb-1">
+            Description
+          </label>
           <textarea
             placeholder="Optional notes or details"
             value={description}
@@ -91,7 +83,9 @@ export default function AddTaskModal({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">Due Date</label>
+          <label className="block text-sm font-medium text-gray-600 mb-1">
+            Due Date
+          </label>
           <input
             type="date"
             value={date}
@@ -100,8 +94,11 @@ export default function AddTaskModal({
           />
         </div>
 
+        {/* User Dropdown */}
         <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">Assign To</label>
+          <label className="block text-sm font-medium text-gray-600 mb-1">
+            Assign To
+          </label>
           <select
             required
             value={selectedUserId}
@@ -110,7 +107,7 @@ export default function AddTaskModal({
           >
             <option value="">Select user</option>
             {users.map((user) => (
-              <option key={user.$id} value={user.$id}>
+              <option key={user.$id} value={user.userId}>
                 {user.name}
               </option>
             ))}
