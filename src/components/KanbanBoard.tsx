@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { databases, DATABASE_ID, COLLECTION_ID, USERS_COLLECTION_ID } from "../appwrite/appwrite";
-import AddTaskModal from "./NewTaskModal";
+import { databases, DATABASE_ID, COLLECTION_ID } from "../appwrite/appwrite";
+import AddTaskModal from "./AddTaskModal";
 import Column from "./Column";
-import { Task, User, TaskStatus } from "../types";
+import { Task, TaskStatus } from "../types";
 import { ID } from "appwrite";
 import {
   DndContext,
@@ -13,16 +13,34 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 
-interface KanbanBoardProps {
-  users: User[];
-  refreshUsers: () => Promise<void>;
+// Users interface according to your Appwrite collection schema
+interface User {
+  $id: string;   // We map userId to $id here
+  name: string;
+  email: string;
 }
 
-export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
+export default function KanbanBoard() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [showModal, setShowModal] = useState(false);
 
-  // Fetch tasks
+  // Fetch users function defined inside this file
+  const fetchUsers = async (): Promise<User[]> => {
+    const USERS_COLLECTION_ID = "6890fa640015b8830dfa"; // Your Users collection ID
+    try {
+      const res = await databases.listDocuments(DATABASE_ID, USERS_COLLECTION_ID);
+      return res.documents.map((doc) => ({
+        $id: doc.userId,
+        name: doc.name,
+        email: doc.email,
+      }));
+    } catch (err) {
+      console.error("Failed to fetch users:", err);
+      return [];
+    }
+  };
+
   const loadTasks = async () => {
     try {
       const res = await databases.listDocuments(DATABASE_ID, COLLECTION_ID);
@@ -32,8 +50,8 @@ export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
         description: doc.description,
         date: doc.date,
         status: doc.status,
-        ownerId: doc.ownerId ?? "",
-        ownerName: doc.ownerName ?? "",
+        ownerId: doc.ownerId,
+        ownerName: doc.ownerName,
       }));
       setTasks(loadedTasks);
     } catch (err) {
@@ -41,11 +59,16 @@ export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
     }
   };
 
+  const loadUsers = async () => {
+    const fetchedUsers = await fetchUsers();
+    setUsers(fetchedUsers);
+  };
+
   useEffect(() => {
+    loadUsers();
     loadTasks();
   }, []);
 
-  // Add new task
   const handleAddTask = async (data: {
     title: string;
     description?: string;
@@ -53,6 +76,7 @@ export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
     ownerId: string;
     ownerName: string;
   }) => {
+    console.log("Adding task with data:", data);
     try {
       const createdDoc = await databases.createDocument(
         DATABASE_ID,
@@ -60,8 +84,8 @@ export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
         ID.unique(),
         {
           title: data.title,
-          description: data.description,
-          date: data.date,
+          description: data.description ?? "",
+          date: data.date ?? "",
           status: "to-do",
           ownerId: data.ownerId,
           ownerName: data.ownerName,
@@ -85,7 +109,6 @@ export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
     }
   };
 
-  // Drag and drop update
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -107,7 +130,6 @@ export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
     }
   };
 
-  // Delete task
   const handleDelete = async (id: string) => {
     try {
       await databases.deleteDocument(DATABASE_ID, COLLECTION_ID, id);
@@ -148,7 +170,6 @@ export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
           onAdd={handleAddTask}
           onClose={() => setShowModal(false)}
           users={users}
-          refreshUsers={refreshUsers}
         />
       )}
     </>
