@@ -60,7 +60,12 @@ export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
     fetchUserAndTasks();
   }, []);
 
-  const handleAddTask = async (data: {
+  
+    const handleAddTask = async (data) => {
+  console.log("Saving task with data:", data);  // Add this
+  ...
+}
+
     title: string;
     description?: string;
     date?: string;
