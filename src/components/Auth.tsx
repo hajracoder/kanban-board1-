@@ -1,18 +1,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 import React, { useState } from "react";
 import { account, databases } from "../appwrite/appwrite";
 import { ID } from "appwrite";
