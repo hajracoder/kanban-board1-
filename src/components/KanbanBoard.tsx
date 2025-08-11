@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { databases, DATABASE_ID, COLLECTION_ID, USERS_COLLECTION_ID } from "../appwrite/appwrite";
+import { account, databases, DATABASE_ID, COLLECTION_ID, USERS_COLLECTION_ID } from "../appwrite/appwrite";
 import AddTaskModal from "./AddTaskModal";
 import Column from "./Column";
 import { Task, User, TaskStatus } from "../types";
@@ -21,6 +21,7 @@ interface KanbanBoardProps {
 export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   const loadTasks = async () => {
     try {
@@ -41,7 +42,22 @@ export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
   };
 
   useEffect(() => {
-    loadTasks();
+    const fetchUserAndTasks = async () => {
+      try {
+        const userData = await account.get();
+        setCurrentUser({
+          $id: userData.$id,
+          name: userData.name || userData.email,
+          email: userData.email,
+        });
+      } catch (error) {
+        console.error("Failed to get current user", error);
+      }
+
+      await loadTasks();
+    };
+
+    fetchUserAndTasks();
   }, []);
 
   const handleAddTask = async (data: {
@@ -139,12 +155,13 @@ export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
         </div>
       </DndContext>
 
-      {showModal && (
+      {showModal && currentUser && (
         <AddTaskModal
           onAdd={handleAddTask}
           onClose={() => setShowModal(false)}
           users={users}
-          refreshUsers={refreshUsers}
+          currentUserId={currentUser.$id}
+          currentUserName={currentUser.name}
         />
       )}
     </>
