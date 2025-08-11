@@ -61,8 +61,6 @@
 
 
 
-
-
 import { useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
@@ -79,7 +77,7 @@ import Auth from "./components/Auth";
 
 import './App.css';
 import { account, databases, DATABASE_ID, USERS_COLLECTION_ID } from "./appwrite/appwrite";
-import { User } from "./types"; // <- yeh tumhare types file se aayega
+import { User } from "./types";
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);

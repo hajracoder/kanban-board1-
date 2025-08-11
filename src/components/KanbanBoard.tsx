@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { databases, DATABASE_ID, COLLECTION_ID } from "../appwrite/appwrite";
-import AddTaskModal from "./AddTaskModal";
+import AddTaskModal from "./NewTaskModal";
 import Column from "./Column";
-import { Task, TaskStatus } from "../types";
+import { Task, TaskStatus, User } from "../types";
 import { ID } from "appwrite";
 import {
   DndContext,
@@ -13,33 +13,14 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 
-// Users interface according to your Appwrite collection schema
-interface User {
-  $id: string;   // We map userId to $id here
-  name: string;
-  email: string;
-}
+type KanbanBoardProps = {
+  users: User[];
+  refreshUsers: () => Promise<void>;
+};
 
-export default function KanbanBoard() {
+export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
   const [showModal, setShowModal] = useState(false);
-
-  // Fetch users function defined inside this file
-  const fetchUsers = async (): Promise<User[]> => {
-    const USERS_COLLECTION_ID = "6890fa640015b8830dfa"; // Your Users collection ID
-    try {
-      const res = await databases.listDocuments(DATABASE_ID, USERS_COLLECTION_ID);
-      return res.documents.map((doc) => ({
-        $id: doc.userId,
-        name: doc.name,
-        email: doc.email,
-      }));
-    } catch (err) {
-      console.error("Failed to fetch users:", err);
-      return [];
-    }
-  };
 
   const loadTasks = async () => {
     try {
@@ -59,13 +40,7 @@ export default function KanbanBoard() {
     }
   };
 
-  const loadUsers = async () => {
-    const fetchedUsers = await fetchUsers();
-    setUsers(fetchedUsers);
-  };
-
   useEffect(() => {
-    loadUsers();
     loadTasks();
   }, []);
 
@@ -76,7 +51,6 @@ export default function KanbanBoard() {
     ownerId: string;
     ownerName: string;
   }) => {
-    console.log("Adding task with data:", data);
     try {
       const createdDoc = await databases.createDocument(
         DATABASE_ID,

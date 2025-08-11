@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { User } from "../utils/fetchUsers";
+import { User } from "../types";
+
 
 type Props = {
   onAdd: (task: {

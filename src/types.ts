@@ -42,7 +42,7 @@ export type Task = {
 
 export type User = {
   $id: string;    // document id in Appwrite
-  userId: string; // user ka unique id (jo account se milta hai)
+  // userId: string; // user ka unique id (jo account se milta hai)
   name: string;
   email: string;
 
