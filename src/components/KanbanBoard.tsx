@@ -62,15 +62,13 @@ export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
 
   
     const handleAddTask = async (data) => {
-  console.log("Saving task with data:", data);  // Add this
-  ...
-}
-
-    title: string;
-    description?: string;
-    date?: string;
-    ownerId: string;
-    ownerName: string;
+console.log("Task data to save:", {
+  title: data.title,
+  status: "to-do",
+  ownerId: data.ownerId,
+  description: data.description ?? "",
+  date: data.date ?? "",
+  ownerName: data.ownerName,
   }) => {
     try {
       const createdDoc = await databases.createDocument(
