@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { User } from "../types";
 
 type Props = {
@@ -11,13 +11,26 @@ type Props = {
   }) => void;
   onClose: () => void;
   users: User[];
+  currentUserId: string;
+  currentUserName: string;
 };
 
-export default function AddTaskModal({ onAdd, onClose, users }: Props) {
+export default function AddTaskModal({
+  onAdd,
+  onClose,
+  users,
+  currentUserId,
+  currentUserName,
+}: Props) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
-  const [selectedUserId, setSelectedUserId] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState(currentUserId);
+
+  // Update selected user when currentUserId changes (optional)
+  useEffect(() => {
+    setSelectedUserId(currentUserId);
+  }, [currentUserId]);
 
   const handleSubmit = () => {
     if (!title.trim()) {
@@ -47,7 +60,7 @@ export default function AddTaskModal({ onAdd, onClose, users }: Props) {
     setTitle("");
     setDescription("");
     setDate("");
-    setSelectedUserId("");
+    setSelectedUserId(currentUserId);
   };
 
   return (
