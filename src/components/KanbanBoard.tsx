@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { account, databases, DATABASE_ID, COLLECTION_ID, USERS_COLLECTION_ID } from "../appwrite/appwrite";
-import AddTaskModal from "./AddTaskModal";
+import { databases, DATABASE_ID, COLLECTION_ID, USERS_COLLECTION_ID } from "../appwrite/appwrite";
+import AddTaskModal from "./NewTaskModal";
 import Column from "./Column";
 import { Task, User, TaskStatus } from "../types";
 import { ID } from "appwrite";
@@ -21,8 +21,8 @@ interface KanbanBoardProps {
 export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showModal, setShowModal] = useState(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
+  // Fetch tasks
   const loadTasks = async () => {
     try {
       const res = await databases.listDocuments(DATABASE_ID, COLLECTION_ID);
@@ -32,8 +32,8 @@ export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
         description: doc.description,
         date: doc.date,
         status: doc.status,
-        ownerId: doc.ownerId,
-        ownerName: doc.ownerName,
+        ownerId: doc.ownerId ?? "",
+        ownerName: doc.ownerName ?? "",
       }));
       setTasks(loadedTasks);
     } catch (err) {
@@ -42,33 +42,16 @@ export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
   };
 
   useEffect(() => {
-    const fetchUserAndTasks = async () => {
-      try {
-        const userData = await account.get();
-        setCurrentUser({
-          $id: userData.$id,
-          name: userData.name || userData.email,
-          email: userData.email,
-        });
-      } catch (error) {
-        console.error("Failed to get current user", error);
-      }
-
-      await loadTasks();
-    };
-
-    fetchUserAndTasks();
+    loadTasks();
   }, []);
 
-  
-    const handleAddTask = async (data) => {
-console.log("Task data to save:", {
-  title: data.title,
-  status: "to-do",
-  ownerId: data.ownerId,
-  description: data.description ?? "",
-  date: data.date ?? "",
-  ownerName: data.ownerName,
+  // Add new task
+  const handleAddTask = async (data: {
+    title: string;
+    description?: string;
+    date?: string;
+    ownerId: string;
+    ownerName: string;
   }) => {
     try {
       const createdDoc = await databases.createDocument(
@@ -77,8 +60,8 @@ console.log("Task data to save:", {
         ID.unique(),
         {
           title: data.title,
-          description: data.description ?? "",
-          date: data.date ?? "",
+          description: data.description,
+          date: data.date,
           status: "to-do",
           ownerId: data.ownerId,
           ownerName: data.ownerName,
@@ -102,6 +85,7 @@ console.log("Task data to save:", {
     }
   };
 
+  // Drag and drop update
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -123,6 +107,7 @@ console.log("Task data to save:", {
     }
   };
 
+  // Delete task
   const handleDelete = async (id: string) => {
     try {
       await databases.deleteDocument(DATABASE_ID, COLLECTION_ID, id);
@@ -158,13 +143,12 @@ console.log("Task data to save:", {
         </div>
       </DndContext>
 
-      {showModal && currentUser && (
+      {showModal && (
         <AddTaskModal
           onAdd={handleAddTask}
           onClose={() => setShowModal(false)}
           users={users}
-          currentUserId={currentUser.$id}
-          currentUserName={currentUser.name}
+          refreshUsers={refreshUsers}
         />
       )}
     </>
