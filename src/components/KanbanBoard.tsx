@@ -95,16 +95,23 @@ export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
     loadTasks();
   }, []);
 
- const handleAddTask = async (data: {
+const handleAddTask = async (data: {
   title: string;
   description?: string;
   date?: string;
   ownerId: string;
   ownerName: string;
 }) => {
-  console.log("handleAddTask called with data:", data);
+  console.log("handleAddTask called with data:", data); // ✅ debug log
 
   try {
+    // Check ownerId before sending to Appwrite
+    if (!data.ownerId) {
+      console.error("❌ ownerId is missing! Task will not be saved.");
+      alert("Failed to save task: ownerId is missing.");
+      return;
+    }
+
     const createdDoc = await databases.createDocument(
       DATABASE_ID,
       COLLECTION_ID,
@@ -118,6 +125,8 @@ export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
         ownerName: data.ownerName,
       }
     );
+
+    console.log("✅ Task saved:", createdDoc); // ✅ log created doc
 
     const newTask: Task = {
       id: createdDoc.$id,
@@ -135,6 +144,7 @@ export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
     alert("Failed to save task. Please try again.");
   }
 };
+
 
   // const handleAddTask = async (data: {
     
@@ -232,13 +242,13 @@ export default function KanbanBoard({ users, refreshUsers }: KanbanBoardProps) {
         </div>
       </DndContext>
 
-      {showModal && (
-        <AddTaskModal
-          onAdd={handleAddTask}
-          onClose={() => setShowModal(false)}
-          users={users}
-        />
-      )}
+     {showModal && users.length > 0 && (
+  <AddTaskModal
+    onAdd={handleAddTask}
+    onClose={() => setShowModal(false)}
+    users={users} // ✅ pass all users
+  />
+)}
     </>
   );
 }
